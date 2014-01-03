@@ -124,9 +124,10 @@ def main():
     
     p = ClientINI()
     if options.list:
-        print "Name"
+        print "%-20s %-20s %s" %("Name", "Title", "Description")
         for pl in p.plugins:
-            print pl
+            print "%-20s %-20s %s" % (pl['name'], pl['title'], pl['description'])
+        return
 
     plugins = options.plugins or None
     p.show_info_parrallel_multiple(args, plugins=plugins)
