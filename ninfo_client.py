@@ -16,27 +16,32 @@ class memoized_property(object):
         return result
 
 class Client:
-    def __init__(self, host, user, api_key):
+
+    def __init__(self, host, user, api_key=None):
         self.host = host
         self.user = user
-        self.api_key = api_key
         self.ses = requests.session()
         self.ses.verify = False
+        if api_key:
+            self.ses.headers["Authorization"] = "Token:" + api_key
 
     @memoized_property
     def plugins(self):
-        r = self.ses.get("%s/info/plugins" % self.host)
+        url = self.PLUGINS_TEMPLATE % {"host": self.host}
+        r = self.ses.get(url)
         r.raise_for_status()
         return r.json()['plugins']
 
     #refactor?
     def get_info_text(self, plugin, q):
-        r = self.ses.get("%s/info/text/%s/%s" % (self.host, plugin, q))
+        url = self.INFO_TEMPLATE % { "host": self.host, "type": "text", "plugin": plugin, "q": q}
+        r = self.ses.get(url)
         r.raise_for_status()
         return r.text
 
     def get_info_json(self, plugin, q):
-        r = self.ses.get("%s/info/json/%s/%s" % (self.host, plugin, q))
+        url = self.INFO_TEMPLATE % { "host": self.host, "type": "json", "plugin": plugin, "q": q}
+        r = self.ses.get(url)
         r.raise_for_status()
         return r.json()
     get_info = get_info_json
@@ -102,6 +107,18 @@ class Client:
             result[arg][p] = r
         return result
         
+class NinfoWebClient(Client):
+    PLUGINS_TEMPLATE = "%(host)s/info/plugins"
+    INFO_TEMPLATE = "%(host)s/info/%(type)s/%(plugin)s/%(q)s"
+
+class DjangoNinfoClient(Client):
+    PLUGINS_TEMPLATE = "%(host)s/ninfo/api/plugins"
+    INFO_TEMPLATE = "%(host)s/ninfo/api/plugins/%(plugin)s/%(type)s/%(q)s"
+
+server_types = {
+    "ninfo-web": NinfoWebClient,
+    "django-ninfo": DjangoNinfoClient,
+}
 
 import ConfigParser
 import os
@@ -113,16 +130,20 @@ def ClientINI(ini_file=None):
         cp.read([os.path.expanduser("~/.config/ninfo.ini"), "ninfo.ini"])
     cfg = dict(cp.items("config"))
 
-    return Client(**cfg)
+    server_type = cfg.pop("server-type")
+    cls = server_types[server_type]
+
+    return cls(**cfg)
 
 def main():
     from optparse import OptionParser
     parser = OptionParser(usage = "usage: %prog [options] [addresses]")
     parser.add_option("-p", "--plugin", dest="plugins", action="append", default=None)
     parser.add_option("-l", "--list", dest="list", action="store_true", default=False)
+    parser.add_option("-c", "--cfg", dest="config", action="store", default=None)
     (options, args) = parser.parse_args()
     
-    p = ClientINI()
+    p = ClientINI(options.config)
     if options.list:
         print "%-20s %-20s %s" %("Name", "Title", "Description")
         for pl in p.plugins:
