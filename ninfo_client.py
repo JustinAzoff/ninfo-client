@@ -23,7 +23,7 @@ class Client:
         self.ses = requests.session()
         self.ses.verify = False
         if api_key:
-            self.ses.headers["Authorization"] = "Token: " + api_key
+            self.ses.headers["Authorization"] = "Token " + api_key
 
     @memoized_property
     def plugins(self):
