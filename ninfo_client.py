@@ -34,7 +34,7 @@ class Client:
 
     #refactor?
     def get_info_text(self, plugin, q):
-        url = self.INFO_TEMPLATE % { "host": self.host, "type": "text", "plugin": plugin, "q": q}
+        url = self.INFO_TEMPLATE % { "host": self.host, "type": "txt", "plugin": plugin, "q": q}
         r = self.ses.get(url)
         r.raise_for_status()
         return r.text
