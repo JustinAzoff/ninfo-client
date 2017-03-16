@@ -2,6 +2,9 @@
 import requests
 from multiprocessing.pool import ThreadPool
 
+import ConfigParser
+import os
+
 class memoized_property(object):
     """A read-only @property that is only evaluated once."""
     def __init__(self, fget, doc=None):
@@ -15,7 +18,7 @@ class memoized_property(object):
         obj.__dict__[self.__name__] = result = self.fget(obj)
         return result
 
-class Client:
+class BaseClient:
 
     def __init__(self, host, user, api_key=None):
         self.host = host
@@ -107,11 +110,11 @@ class Client:
             result[arg][p] = r
         return result
         
-class NinfoWebClient(Client):
+class NinfoWebClient(BaseClient):
     PLUGINS_TEMPLATE = "%(host)s/info/plugins"
     INFO_TEMPLATE = "%(host)s/info/%(type)s/%(plugin)s/%(q)s"
 
-class DjangoNinfoClient(Client):
+class DjangoNinfoClient(BaseClient):
     PLUGINS_TEMPLATE = "%(host)s/ninfo/api/plugins"
     INFO_TEMPLATE = "%(host)s/ninfo/api/plugins/%(plugin)s/%(type)s/%(q)s"
 
@@ -120,8 +123,11 @@ server_types = {
     "django-ninfo": DjangoNinfoClient,
 }
 
-import ConfigParser
-import os
+def Client(server_type, host, user=None, api_key=None):
+    cls = server_types[server_type]
+
+    return cls(host=host, user=user, api_key=api_key)
+
 def ClientINI(ini_file=None):
     cp = ConfigParser.ConfigParser()
     if ini_file:

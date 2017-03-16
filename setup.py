@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ninfo-client',
-    version='0.1.0',
+    version='0.2.0',
     zip_safe=True,
     include_package_data=True,
     py_modules = ["ninfo_client"],
