@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import requests
 from multiprocessing.pool import ThreadPool
 
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
+
 import os
 
 class memoized_property(object):
@@ -56,18 +61,18 @@ class BaseClient:
         for p in plugins:
             try :
                 res = self.get_info_text(p, arg)
-            except Exception, e:
+            except Exception as e:
                 res = "Error: %s" % e
             if res:
-                print '*** %s ***' % p
-                print res
+                print('*** %s ***' % p)
+                print(res)
 
     def _run(self, tup):
         type, plugin, arg = tup
         func = getattr(self, 'get_info_' + type)
         try :
             return plugin, arg, func(plugin, arg)
-        except Exception, e:
+        except Exception as e:
             return plugin, arg, e
 
 
@@ -91,15 +96,15 @@ class BaseClient:
         reqs = self.make_requests("text", [arg], plugins)
         for p, arg, res in reqs:
             if res:
-                print  '*** %s ***' % p
-                print res
+                print('*** %s ***' % p)
+                print(res)
 
     def show_info_parrallel_multiple(self, args, plugins=None):
         reqs = self.make_requests("text", args, plugins)
         for p, arg, res in reqs:
             if res:
-                print  '*** %s %s ***' % (p, arg)
-                print res
+                print('*** %s %s ***' % (p, arg))
+                print(res)
 
     def get_info_dict_multiple(self, args, plugins=None):
         reqs = self.make_requests("json", args, plugins)
@@ -129,7 +134,7 @@ def Client(server_type, host, user=None, api_key=None):
     return cls(host=host, user=user, api_key=api_key)
 
 def ClientINI(ini_file=None):
-    cp = ConfigParser.ConfigParser()
+    cp = configparser.ConfigParser()
     if ini_file:
         cp.read([ini_file])
     else:
@@ -151,9 +156,9 @@ def main():
     
     p = ClientINI(options.config)
     if options.list:
-        print "%-20s %-20s %s" %("Name", "Title", "Description")
+        print("%-20s %-20s %s" %("Name", "Title", "Description"))
         for pl in p.plugins:
-            print "%-20s %-20s %s" % (pl['name'], pl['title'], pl['description'])
+            print("%-20s %-20s %s" % (pl['name'], pl['title'], pl['description']))
         return
 
     plugins = options.plugins or None
