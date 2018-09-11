@@ -29,7 +29,6 @@ class BaseClient:
         self.host = host
         self.user = user
         self.ses = requests.session()
-        self.ses.verify = False
         if api_key:
             self.ses.headers["Authorization"] = "Token " + api_key
 
